@@ -1,4 +1,6 @@
 ﻿  compression301.cpp
-C:\codeBase\CIS301-huffman\compression301\compression301\compression301.cpp(48,23): warning C4018: '<': signed/unsigned mismatch
-C:\codeBase\CIS301-huffman\compression301\compression301\compression301.cpp(188,27): warning C4018: '<': signed/unsigned mismatch
+C:\codeBase\CIS301-huffman\compression301\compression301\compression301.cpp(47,23): warning C4018: '<': signed/unsigned mismatch
+C:\codeBase\CIS301-huffman\compression301\compression301\compression301.cpp(193,27): warning C4018: '<': signed/unsigned mismatch
+  Node.cpp
+  Generating Code...
   compression301.vcxproj -> C:\codeBase\CIS301-huffman\compression301\Debug\compression301.exe

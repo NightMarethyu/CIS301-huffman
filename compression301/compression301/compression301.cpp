@@ -2,7 +2,6 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
-#include <map>
 #include <queue>
 #include <string>
 #include <vector>
@@ -11,10 +10,10 @@
 
 using namespace std;
 
-map<char, int> frequencies;
+int frequencies[256] = { NULL };
 vector<Node*> huffman;
 queue<char> info;
-map<char, string> easyCoding;
+string easyCoding[256];
 int bitUse;
 ofstream ofs;
 
@@ -63,7 +62,7 @@ int main(int argc, char** argv)
     auto end1 = chrono::high_resolution_clock::now();
     chrono::duration<double> duration1 = (end1 - start1);
 
-    cout << "Total Time: " << duration1.count() << " seconds" << endl << "Generating Huffman Encodings...";
+    cout << "Total Time: " << duration1.count() << " seconds" << endl << "Generating Huffman Tree...";
 
     auto start2 = chrono::high_resolution_clock::now();
 
@@ -72,43 +71,53 @@ int main(int argc, char** argv)
     auto end2 = chrono::high_resolution_clock::now();
     chrono::duration<double> duration2 = end2 - start2;
 
-    cout << "Total Time: " << duration2.count() << " seconds" << endl << "Encoding Document...";
+    cout << "Total Time: " << duration2.count() << " seconds" << endl << "Generating Huffman Encodings...";
+
     auto start3 = chrono::high_resolution_clock::now();
 
-    encodeDoc();
+    preorder(huffman[0]);
+    ofs << "*****" << endl << bitUse << endl;
 
     auto end3 = chrono::high_resolution_clock::now();
     chrono::duration<double> duration3 = end3 - start3;
 
-    cout << "Total Time: " << duration3.count() << " seconds" << endl;
+    cout << "Total Time: " << duration3.count() << " seconds" << endl << "Encoding Document...";
+    auto start4 = chrono::high_resolution_clock::now();
+
+    encodeDoc();
+
+    auto end4 = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration4 = end4 - start4;
+
+    cout << "Total Time: " << duration4.count() << " seconds" << endl;
 
     ofs.close();
     huffman[0]->byebye(huffman[0]);
 
-    chrono::duration<double> totalTime = duration1 + duration2 + duration3;
+    chrono::duration<double> totalTime = duration1 + duration2 + duration3 + duration4;
 
     cout << "Total Program Time: " << totalTime.count() << " seconds" << endl;
 
 }
 
 void getFrequencies(string path) {
-    ifstream file;
-    file.open(path, ios::in);
-
-    char single[1];
-    while (file.read(single, 1)) {
-        frequencies[single[0]]++;
-        info.push(single[0]);
+    char ch;
+    fstream fin(path, fstream::in);
+    while (fin >> noskipws >> ch) {
+        frequencies[ch]++;
+        info.push(ch);
     }
-    file.close();
+    fin.close();
 }
 
 void buildHuffman() {
-    
-    for (auto c : frequencies) {
-        char name = c.first;
-        int freak = c.second;
-        huffman.push_back(new Node(name, freak));
+
+    for (int i = 0; i < 256; i++) {
+        if (frequencies[i]) {
+            char name = i;
+            int freak = frequencies[i];
+            huffman.push_back(new Node(name, freak));
+        }
     }
 
     while (huffman.size() > 1) {
@@ -121,9 +130,6 @@ void buildHuffman() {
         huffman.erase(huffman.begin() + 0);
         huffman.push_back(combo);
     }
-
-    preorder(huffman[0]);
-    ofs << "*****" << endl << bitUse << endl;
 }
 
 vector<string> split(string s, char c) {
@@ -179,7 +185,6 @@ bool compare(Node* a, Node* b) {
 void encodeDoc() {
     unsigned char output = 0b00000000;
     int count = 0;
-    string writeOut = "";
 
     while (!info.empty()) {
         string bin = easyCoding[info.front()];
@@ -192,7 +197,7 @@ void encodeDoc() {
             }
             count++;
             if (count == 8) {
-                writeOut += output;
+                ofs << output;
                 output = 0b00000000;
                 count = 0;
             }
@@ -204,7 +209,6 @@ void encodeDoc() {
             output = output << 1;
             count++;
         }
-        writeOut += output;
     }
-    ofs << writeOut;
+    ofs << output;
 }
