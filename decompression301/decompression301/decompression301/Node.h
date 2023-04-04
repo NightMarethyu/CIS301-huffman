@@ -5,7 +5,7 @@ class Node
 {
 public:
 	char name;
-	std::string encoding;
+	//std::string encoding;
 	Node* left;
 	Node* right;
 	Node();

@@ -13,10 +13,10 @@ using namespace std;
 vector<string> split(string, char);
 void getPrefixCodes(vector<string>);
 void addLeaf(vector<string>);
-void decodeDoc(vector<unsigned char>, int, int);
-void viewHuff(Node*);
+void decodeDoc(int);
+//void viewHuff(Node*);
 
-
+ifstream ifs;
 ofstream ofs;
 Node* head = new Node();
 
@@ -29,15 +29,12 @@ int main(int argc, char** argv)
 
     string path = argv[1];
 
-    ifstream ifs;
-    ifs.open(path, ios::in, ios::binary);
+    ifs.open(path, ios::binary);
 
     if (!ifs) {
         cout << "Error: File Not found at " << path << endl;
         exit(-1);
     }
-
-    cout << "Reading in file...";
 
     string line;
     vector<string> huffmanCodes;
@@ -53,23 +50,9 @@ int main(int argc, char** argv)
     getline(ifs, line);
     bitcount = stoi(line);
 
-    int bytecount = bitcount % 8 == 0 ? bitcount / 8 : (bitcount / 8) + 1;
-
-    vector<unsigned char> chars;
-
-    for (int i = 0; i <= bytecount; i++) {
-        char c;
-        ifs.get(c);
-        chars.push_back(c);
-    }
-
-    ifs.close();
-
-    cout << "Done" << endl;
-
     auto path2 = split(path, '\\');
     string newFilePath = "";
-    for (int i = 0; i < path2.size() - 1; i++) {
+    for (unsigned int i = 0; i < path2.size() - 1; i++) {
         newFilePath += path2[i] + "\\";
     }
 
@@ -93,13 +76,14 @@ int main(int argc, char** argv)
     auto start2 = chrono::high_resolution_clock::now();
 
     //viewHuff(head);
-    decodeDoc(chars, bitcount, bytecount);
+    decodeDoc(bitcount);
 
     auto end2 = chrono::high_resolution_clock::now();
 
     chrono::duration<double> duration2 = end2 - start2;
     cout << "Total time: " << duration2.count() << " seconds" << endl;
 
+    ifs.close();
     ofs.close();
     head->byebye(head);
 
@@ -134,61 +118,73 @@ void addLeaf(vector<string> code) {
         n = code[1][0];
     }
 
-    for (int i = 0; i < code[0].size(); i++) {
+    for (unsigned int i = 0; i < code[0].size(); i++) {
         if (code[0][i] == '1') {
             if (!current->right) {
                 current->right = new Node();
             }
-            current->right->encoding = current->encoding + "1";
+            //current->right->encoding = current->encoding + "1";
             current = current->right;
         }
         else {
             if (!current->left) {
                 current->left = new Node();
             }
-            current->left->encoding = current->encoding + "0";
+            //current->left->encoding = current->encoding + "0";
             current = current->left;
         }
     }
     current->name = n;
 }
 
-void viewHuff(Node* cur) {
-    if (cur) {
-        if (cur->name) {
-            cout << cur->name << " ";
-        }
-        if (cur->encoding != "") {
-            cout << cur->encoding;
-        }
-        cout << endl;
-        viewHuff(cur->left);
-        viewHuff(cur->right);
-    }
-}
+//void viewHuff(Node* cur) {
+//    if (cur) {
+//        if (cur->name) {
+//            cout << cur->name << " ";
+//        }
+//        if (cur->encoding != "") {
+//            cout << cur->encoding;
+//        }
+//        cout << endl;
+//        viewHuff(cur->left);
+//        viewHuff(cur->right);
+//    }
+//}
 
-void decodeDoc(vector<unsigned char> chars, int bitcount, int bytecount) {
-    string output = "";
+void decodeDoc(int bitcount) {
+    int bytecount = (bitcount / 8) + 1;
     Node* current = head;
 
-    for (unsigned char c : chars) {
-        bitset<8> set = c;
-        for (int i = 7; i >= 0; i--) {
-            if (current->name) {
-                ofs << current->name;
-                current = head;
-            }
-            if (set[i]) {
-                current = current->right;
-            }
-            else {
-                current = current->left;
-            }
-            bitcount--;
-            if (bitcount == 0) {
-                break;
+    while (bitcount > 0) {
+        int toRead;        
+        if (200 < bytecount) {
+            toRead = 200;
+            bytecount -= 200;
+        }
+        else {
+            toRead = bytecount;
+            bytecount = 0;
+        }
+        char* data = new char[toRead];
+        ifs.read(data, toRead);
+        for (int i = 0; i < toRead; i++) {
+            bitset<8> set = data[i];
+            for (int j = 7; j >= 0; j--) {
+                if (current->name) {
+                    ofs << current->name;
+                    current = head;
+                }
+                if (bitcount == 0) {
+                    break;
+                }
+                current = current->getNextNode(set[j]);
+                if (!current) {
+                    current = head;
+                }
+                bitcount--;
             }
         }
+        delete[] data;
     }
 }
 

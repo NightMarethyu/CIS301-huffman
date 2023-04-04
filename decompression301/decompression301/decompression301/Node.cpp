@@ -6,9 +6,6 @@ using namespace std;
 Node::Node() {};
 
 Node* Node::getNextNode(bool t) {
-	if (name) {
-		return this;
-	}
 	return t ? right : left;
 }
 
